@@ -10,7 +10,7 @@ def jprint(obj, sort_keys=True, indent=4):
 
 
 def harvestSections(roster, subject, number, *args):
-    ans={}
+    ans = {}
     response = requests.get("https://classes.cornell.edu/browse/roster/{}/class/{}/{}".format(roster, subject, number))
     # print(response.text)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -23,37 +23,56 @@ def harvestSections(roster, subject, number, *args):
     for i in enrollBox.children:
         if "section" in i['class']:
             classNum = 0
-            sectionName=""
+            sectionName = ""
             available = None
             for j in i.children:
-                if j['class']==['class-numbers']:
-                    guessNum=int(j.find('p').find('strong').contents[0])
-                    if len(args)==0 or guessNum in args[0]:
+                if j['class'] == ['class-numbers']:
+                    guessNum = int(j.find('p').find('strong').contents[0])
+                    if len(args) == 0 or guessNum in args[0]:
                         classNum = guessNum
-                        sectionName=j.find('em').contents[0]+" "+str(j.find('p').contents[-2]).strip()
-                elif j['class']==['open-status']:
+                        sectionName = j.find('em').contents[0] + " " + str(j.find('p').contents[-2]).strip()
+                elif j['class'] == ['open-status']:
                     if 'open-status-closed' in j.span.span['class']:
-                        available=False
+                        available = False
                     if 'open-status-open' in j.span.span['class']:
-                        available=True
+                        available = True
             if classNum != 0:
-                ans[sectionName]= [classNum, available]
+                ans[sectionName] = [classNum, available]
     return ans
 
-def main():
-    ans={}
-    courses=[("CS", 4410),("CS", 4700), ("MATH", 1920)]
+
+def test():
+    ans = {}
+    courses = [("CS", 4410), ("CS", 4700), ("MATH", 1920)]
     roster = "SP21"
     for subject, number in courses:
-        ans[subject+' '+str(number)]= harvestSections(roster, subject, number)
+        ans[subject + ' ' + str(number)] = harvestSections(roster, subject, number)
 
-    specCourses=[("ECON", 1120, [4840, 4842, 5041, 4843, 4845, 4848, 17802, 17805])]
+    specCourses = [("ECON", 1120, [4840, 4842, 5041, 4843, 4845, 4848, 17802, 17805])]
     for subject, number, restriction in specCourses:
-        ans[subject+' '+str(number)]=harvestSections(roster, subject, number, restriction)
+        ans[subject + ' ' + str(number)] = harvestSections(roster, subject, number, restriction)
     for key in ans:
-        val=ans[key]
+        val = ans[key]
         for key2 in list(val.keys()):
-            if val[key2][-1]==False:
+            if val[key2][-1] == False:
+                del val[key2]
+    jprint(ans)
+
+
+if __name__ == "__main__":
+    ans = {}
+    courses = [("CS", 4380), ("CS", 4700), ("MATH", 4500)]
+    roster = "SP21"
+    for subject, number in courses:
+        ans[subject + ' ' + str(number)] = harvestSections(roster, subject, number)
+
+    specCourses = [("ECON", 1120, [4840, 4842, 5041, 4843, 4845, 4848, 17802, 17805])]
+    for subject, number, restriction in specCourses:
+        ans[subject + ' ' + str(number)] = harvestSections(roster, subject, number, restriction)
+    for key in ans:
+        val = ans[key]
+        for key2 in list(val.keys()):
+            if val[key2][-1] == False:
                 del val[key2]
 
-main()
+    pass
